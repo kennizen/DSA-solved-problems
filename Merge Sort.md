@@ -26,6 +26,7 @@ void merge(int *ar, int s, int e, int m)
             ar[k++] = first[i1++];
         else
             ar[k++] = second[i2++];
+            
     }
     
     while(i1 < first.size())

@@ -1,74 +1,159 @@
+#pragma once
+#ifndef student_h
+#define student_h
+#include <string>
+#include <vector>
+
+#define PRINT_HEADER(msg) std::cout << "**** ->" << msg << " <-****\n"
+
+extern std::vector<std::string> college_names;
+const int SIZE = 3;
+
+struct Student
+{
+    std::string f_name{};
+    std::string l_name{};
+    int studentID;
+    std::string col_name{};
+};
+
+class College
+{
+    std::vector<int> ratings;
+    std::vector<Student> students;
+    std::string names[SIZE];
+    std::vector<std::string> cnames;
+    bool add{false};
+
+public:
+    College();
+    College(std::vector<std::string> names);
+    std::vector<std::string> m_name;
+    College &operator+=(const Student &st);
+    void operator==(const std::vector<Student> &st);
+    void print() const;
+    void scanStudentForCollege();
+};
+#endif //! student_h
+
+// this if student.cpp file--------- -----------------------
+
 #include <iostream>
-#include <bits/stdc++.h>
+#include <string>
+#include <vector>
+#include <thread>
+#include <algorithm>
 
-using namespace std;
-
-int merge(int ar[], int tmp[], int s, int m, int e)
+College::College()
 {
-    int count = 0;
-
-    int i = s;
-    int j = m + 1;
-    int k = s;
-
-    while (i <= m && j <= e)
-    {
-        if (ar[i] < ar[j])
-        {
-            tmp[k++] = ar[i++];
-        }
-        else
-        {
-            tmp[k++] = ar[j++];
-            count += (m + 1) - i;
-        }
-    }
-
-    while (i <= m)
-    {
-        tmp[k++] = ar[i++];
-    }
-
-    while (j <= e)
-    {
-        tmp[k++] = ar[j++];
-    }
-
-    for (i = s; i <= e; i++)
-    {
-        ar[i] = tmp[i];
-    }
-
-    return count;
 }
-int mergeSort(int ar[], int tmp[], int s, int e)
+
+College::College(std::vector<std::string> cn)
 {
-    if (s >= e)
-    {
-        return 0;
-    }
-
-    int m, count = 0;
-    m = (s + e) / 2;
-
-    count += mergeSort(ar, tmp, s, m);
-    count += mergeSort(ar, tmp, m + 1, e);
-
-    count += merge(ar, tmp, s, m, e);
-
-    return count;
+    for (int i = 0; i < SIZE; i++)
+        cnames.push_back(cn[i]);
 }
+
+College &College::operator+=(const Student &st)
+{
+    auto findCollege = [=](const Student &st)
+    {
+        for (auto &c : college_names)
+            if (st.col_name == c)
+                add = true;
+        return add;
+    };
+
+    if (findCollege(st))
+        students.push_back(st);
+    else
+        throw "Unknow College name:" + st.col_name;
+
+    return *this;
+}
+void College::print() const
+{
+    for (auto &s : students)
+        std::cout << s.f_name << "" << s.l_name
+                  << "" << s.studentID << std::endl;
+}
+
+void College::operator==(const std::vector<Student> &st)
+{
+    auto findStudentWithCollege = [=](const Student &st)
+    {
+        std::string c_name;
+        for (int i = 0; i != students.size(); i++)
+        {
+            if (st.col_name == college_names[i])
+                c_name = college_names[i];
+        }
+        return c_name;
+    };
+
+    for (auto c : st)
+        c.col_name = findStudentWithCollege(c);
+}
+
+void collegeStu(const std::vector<Student>::iterator begin,
+                const std::vector<Student>::iterator end)
+{
+    std::transform(begin, end, begin, [](const Student &st)
+                   {
+ std::string c_name;
+ for (int i = 0; i != SIZE; i++) {
+  if (st.col_name == college_names[i])
+   c_name = college_names[i];
+ }
+ return c_name; });
+
+    College cl;
+
+    for (auto c = begin; c != end; c++)
+        cl.m_name.push_back(c->col_name);
+}
+
+void College::scanStudentForCollege()
+{
+    thread_local step = 0;
+    std::thread t1(collegeStu, students.begin(), students.end());
+    t1.join();
+}
+
+// this is main file --------- -----------------------
+
+// main.cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+
+std::vector<std::string> college_names{
+    "Seneca",
+    "Cambrian",
+    "Fanshawe",
+};
 
 int main()
 {
-    int ar[] = {3,2,1};
-    int temp[3];
+    PRINT_HEADER("College and Student Program");
+    std::vector st{
+        {"Mia", "Yang", 2638, "Seneca"},
+        {"Mia", "Yang", 2638, "Seneca"},
+        {"Mia", "Yang", 2638, "Seneca"},
+        {"Mia", "Yang", 2638, "Seneca"}};
 
-    cout << mergeSort(ar, temp, 0, 2) << endl;
-    for (int i = 0; i < 3; i++)
+    std::unique_ptr<College &> c(new College);
+    std::unique_ptr<College> c3 = c;
+    try
     {
-        cout << ar[i] << " ";
+        ((*c += st[0]) += st[1]);
     }
-    cout << endl;
-    return 0;
+    catch (std::string &msg)
+    {
+        std::cout << msg << std::endl;
+    }
+
+    c->scnaStudnetForCollege();
+    c->print();
 }
